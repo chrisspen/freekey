@@ -4,7 +4,7 @@ FreeKey - Allows limited keyboard use on a locked desktop
 
 Overview
 --------
-Monitors key presses system-wide and runs commands in response to certain
+Monitors key presses system-wide and runs custom commands in response to certain
 key presses.
 
 This script was initially designed to allow the multimedia keys to still
@@ -15,20 +15,24 @@ Installation
 ------------
 
 ::
+
     sudo apt-get install python-xlib
     sudo pip install https://github.com/chrisspen/freekey/zipball/master
-    sudo python freekey.py install
-
-The daemon should automatically launch when you login.
+    sudo freekey install
 
 Usage
 -----
 
-Modify /etc/freekey.conf to associate events with shell commands.
+Modify `/etc/freekey.conf` to associate events with shell commands.
 
 Each line is of the form <event> <command>, where <event> is either
-a key name or scan code.
+a key name or scan code, and <command> is an arbitrary shell command.
 
-To find a key's name or code, run `freekey.py echo` and press the key.
+To find a key's name or code, run `freekey echo` and press the key.
 
-You can test it by running `freekey.py run`.
+To purge it from your system run:
+
+::
+
+    sudo freekey uninstall
+    sudo pip uninstall freekey
