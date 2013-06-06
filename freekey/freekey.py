@@ -117,8 +117,13 @@ def write_default_conf(fn):
     if os.path.isfile(fn):
         print 'Configuration file %s exists. Skipping file generation.' % fn
     open(fn, 'w').write(r"""#ScanCode Command
+# volume up/down
 122 gnome-screensaver-command -q | grep "is active" && bash -c '/usr/bin/pactl -- set-sink-volume `pacmd list-sinks | grep -P -o "(?<=\* index: )[0-9]+"` -10%'
 123 gnome-screensaver-command -q | grep "is active" && bash -c '/usr/bin/pactl -- set-sink-volume `pacmd list-sinks | grep -P -o "(?<=\* index: )[0-9]+"` +10%'
+# mute
+121 gnome-screensaver-command -q | grep "is active" && bash -c '/usr/bin/pactl -- set-sink-mute `pacmd list-sinks | grep -P -o "(?<=\* index: )[0-9]+"` `pacmd list-sinks | grep -P -o "muted: no" | wc -l`'
+# play/pause
+171 gnome-screensaver-command -q | grep "is active" && bash -c '/usr/bin/pactl -- suspend-sink `pacmd list-sinks | grep -P -o "(?<=\* index: )[0-9]+"` `pacmd list-sinks | grep -P -o "state: RUNNING" | wc -l`'
 """)
     
 def echo_keypresses():
