@@ -14,7 +14,7 @@ try:
     from Xlib.display import Display
     from Xlib import X
 except ImportError:
-    print>>sys.stderr, 'Unable to import xlib: %s' % (e,)
+    print>>sys.stderr, 'Unable to import Xlib: %s' % (e,)
     print>>sys.stderr, 'Please ensure python-xlib is installed.'
     print>>sys.stderr, 'e.g. sudo apt-get install python-xlib'
 
@@ -22,7 +22,7 @@ from pyxhook import HookManager
 
 from daemon import Daemon
 
-VERSION = (0, 1, 1)
+VERSION = (0, 1, 2)
 __version__ = '.'.join(map(str, VERSION))
 
 ACTIONS = (
@@ -80,7 +80,7 @@ class FreeKey(Daemon):
 #                continue
             scancode = int(scancode)
             command = ' '.join(parts[1:])
-            print 'Loaded command binding: %s = %s' % (scancode, command)
+            #print 'Loaded command binding: %s = %s' % (scancode, command)
             self.event_to_command[scancode] = command
         
     def handle_keydown(self, event):
