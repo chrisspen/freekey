@@ -3,6 +3,7 @@
 2012.5.26 CKS
 Monitors and responds to key presses.
 """
+from __future__ import print_function
 
 import commands
 import os
@@ -13,10 +14,13 @@ import time
 try:
     from Xlib.display import Display
     from Xlib import X
-except ImportError:
-    print>>sys.stderr, 'Unable to import Xlib: %s' % (e,)
-    print>>sys.stderr, 'Please ensure python-xlib is installed.'
-    print>>sys.stderr, 'e.g. sudo apt-get install python-xlib'
+except ImportError as e:
+    print('='*80, file=sys.stderr)
+    print('Unable to import Xlib: %s' % (e,), file=sys.stderr)
+    print('Please ensure python-xlib is installed.', file=sys.stderr)
+    print('e.g. sudo apt-get install python-xlib', file=sys.stderr)
+    print('='*80, file=sys.stderr)
+    sys.exit(1)
 
 from pyxhook import HookManager
 
@@ -75,20 +79,20 @@ class FreeKey(Daemon):
             if not line or line.startswith('#'):
                 continue
             if len(parts) < 2:
-                print 'Malformed line: %i' % i
+                print('Malformed line: %i' % i)
                 continue
             scancode = parts[0]
 
 #            if not scancode.isdigit():
-#                print 'Malformed scan code: %i' % i
+#                print('Malformed scan code: %i' % i
 #                continue
             #scancode = int(scancode)
             command = ' '.join(parts[1:])
-            #print 'Loaded command binding: %s = %s' % (scancode, command)
+            #print('Loaded command binding: %s = %s' % (scancode, command)
             self.event_to_command[scancode] = command
 
     def handle_keydown(self, event):
-        #print 'keydown:',event
+        #print('keydown:',event
 
         if event.Key in ["Control_R", "Control_L",]:
             self.control_down = True
@@ -122,11 +126,11 @@ class FreeKey(Daemon):
 
         command = self.event_to_command.get(key)
         if command:
-            print 'Running: %s' % command
+            print('Running: %s' % command)
             os.system(command)
 
     def handle_keyup(self, event):
-        #print 'keyup:',event
+        #print('keyup:',event
         if event.Key in ["Control_R", "Control_L",]:
             self.control_down = False
 
@@ -140,7 +144,7 @@ class FreeKey(Daemon):
             self.altGr_down = False
 
     def run(self):
-        print 'Running...'
+        print('Running...')
         hm = HookManager()
         hm.HookKeyboard()
         hm.KeyDown = self.handle_keydown
@@ -149,7 +153,7 @@ class FreeKey(Daemon):
 
 def write_default_conf(fn):
     if os.path.isfile(fn):
-        print 'Configuration file %s exists. Skipping file generation.' % fn
+        print('Configuration file %s exists. Skipping file generation.' % fn)
     open(fn, 'w').write(r"""#ScanCode Command
 # Note: If you're running Cinnamon, substitute 'gnome-screensaver-command' with 'cinnamon-screensaver-command'
 # volume up/down
@@ -165,26 +169,26 @@ def write_default_conf(fn):
 """)
 
 def echo_keypresses():
-    print 'Echoing key presses.'
-    print 'Press ctrl+c to exit.'
+    print('Echoing key presses.')
+    print('Press ctrl+c to exit.')
     control_keys = ["Control_R", "Control_L",]
     control = [False]
 
     def handle_keydown(event):
-        print 'Key-down:'
-        print '\tkey:',event.Key
-        print '\tkey id:',event.KeyID
-        print '\tscan code:',event.ScanCode
+        print('Key-down:')
+        print('\tkey:', event.Key)
+        print('\tkey id:', event.KeyID)
+        print('\tscan code:', event.ScanCode)
         if event.Key in control_keys:
             control[0] = True
         elif control[0] and event.Key in ('C','c'):
             sys.exit()
 
     def handle_keyup(event):
-        print 'Key-up:'
-        print '\tkey:',event.Key
-        print '\tkey id:',event.KeyID
-        print '\tscan code:',event.ScanCode
+        print('Key-up:')
+        print('\tkey:', event.Key)
+        print('\tkey id:', event.KeyID)
+        print('\tscan code:', event.ScanCode)
         if event.Key in control_keys:
             control[0] = False
 
@@ -211,13 +215,13 @@ def echo_keypresses():
 #        % dict(fqfn=fqfn, installed_fqfn=installed_fqfn))
 
 def install_profile_daemon():
-    print 'Writing %s...' % DEFAULT_PROFILE_SCRIPT
+    print('Writing %s...' % DEFAULT_PROFILE_SCRIPT)
     open(DEFAULT_PROFILE_SCRIPT, 'w').write(r"""#!/bin/bash
 freekey start
 """)
 
 def uninstall_profile_daemon():
-    print 'Removing %s...' % DEFAULT_PROFILE_SCRIPT
+    print('Removing %s...' % DEFAULT_PROFILE_SCRIPT)
     os.remove(DEFAULT_PROFILE_SCRIPT)
 
 if __name__ == "__main__":
