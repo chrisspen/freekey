@@ -83,10 +83,10 @@ class FreeKey(Daemon):
                 continue
             scancode = parts[0]
 
-#            if not scancode.isdigit():
-#                print('Malformed scan code: %i' % i
-#                continue
-            #scancode = int(scancode)
+            if not re.match('(ctrl_)?(shift_)?(alt_)?(altgr_)?\d+', scancode):
+                print('Malformed scan code: %i' % i)
+                continue
+
             command = ' '.join(parts[1:])
             #print('Loaded command binding: %s = %s' % (scancode, command)
             self.event_to_command[scancode] = command
