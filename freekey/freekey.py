@@ -57,16 +57,16 @@ class FreeKey(Daemon):
 
     def __init__(self,
         conf=DEFAULT_CONF,
-        control_c_kill=False,
+        ctrl_c_kill=False,
         *args, **kwargs):
 
         super(FreeKey, self).__init__(*args, **kwargs)
 
-        self.control_down = False
+        self.ctrl_down = False
         self.shift_down = False
         self.alt_down = False
-        self.altGr_down = False
-        self.control_c_kill = control_c_kill
+        self.altgr_down = False
+        self.ctrl_c_kill = ctrl_c_kill
 
         # Process configuration file.
         assert os.path.isfile(conf), 'Configuration file %s not found.'
@@ -92,10 +92,8 @@ class FreeKey(Daemon):
             self.event_to_command[scancode] = command
 
     def handle_keydown(self, event):
-        #print('keydown:',event
-
         if event.Key in ["Control_R", "Control_L",]:
-            self.control_down = True
+            self.ctrl_down = True
 
         if event.Key in ["Shift_R", "Shift_L"]:
             self.shift_down = True
@@ -104,25 +102,14 @@ class FreeKey(Daemon):
             self.alt_down = True
 
         if event.ScanCode in [108]:
-            self.altGr_down = True
+            self.altgr_down = True
 
-        if self.control_c_kill:
-            if self.control_down and event.Key in ('C','c'):
+        if self.ctrl_c_kill:
+            if self.ctrl_down and event.Key in ('C','c'):
                 sys.exit()
 
-        key = str(event.ScanCode)
-
-        if self.altGr_down == True:
-            key = "altgr_" + key
-
-        if self.alt_down == True:
-            key = "alt_" + key
-
-        if self.shift_down == True:
-            key = "shift_" + key
-
-        if self.control_down == True:
-            key = "ctrl_" + key
+        key = ''.join([meta + "_" for meta in ["ctrl", "shift", "alt", "altgr"] if self[meta]])
+        key += str(event.ScanCode)
 
         command = self.event_to_command.get(key)
         if command:
@@ -130,9 +117,9 @@ class FreeKey(Daemon):
             os.system(command)
 
     def handle_keyup(self, event):
-        #print('keyup:',event
+        #print('keyup:', event)
         if event.Key in ["Control_R", "Control_L",]:
-            self.control_down = False
+            self.ctrl_down = False
 
         if event.Key in ["Shift_R", "Shift_L"]:
             self.shift_down = False
@@ -141,7 +128,7 @@ class FreeKey(Daemon):
             self.alt_down = False
 
         if event.ScanCode in [108]:
-            self.altGr_down = False
+            self.altgr_down = False
 
     def run(self):
         print('Running...')
@@ -275,7 +262,7 @@ Actions:
         daemon = FreeKey(**options.__dict__)
         daemon.restart()
     elif action == RUN:
-        daemon = FreeKey(control_c_kill=True, **options.__dict__)
+        daemon = FreeKey(ctrl_c_kill=True, **options.__dict__)
         daemon.run()
     elif action == START:
         daemon = FreeKey(**options.__dict__)
