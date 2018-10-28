@@ -62,6 +62,8 @@ class FreeKey(Daemon):
 
         super(FreeKey, self).__init__(*args, **kwargs)
 
+        self.super_r_down = False
+        self.super_l_down = False
         self.control_down = False
         self.shift_down = False
         self.alt_down = False
@@ -83,7 +85,7 @@ class FreeKey(Daemon):
                 continue
             scancode = parts[0]
 
-            if not re.match('(ctrl_)?(shift_)?(alt_)?(altgr_)?\d+', scancode):
+            if not re.match('(super_r_)?(super_l_)?(ctrl_)?(shift_)?(alt_)?(altgr_)?\d+', scancode):
                 print('Malformed scan code: %i' % i)
                 continue
 
@@ -93,6 +95,12 @@ class FreeKey(Daemon):
 
     def handle_keydown(self, event):
         #print('keydown:',event
+
+        if event.Key in ["Super_R"]:
+            self.super_r_down = True
+
+        if event.Key in ["Super_L"]:
+            self.super_l_down = True
 
         if event.Key in ["Control_R", "Control_L",]:
             self.control_down = True
@@ -111,6 +119,12 @@ class FreeKey(Daemon):
                 sys.exit()
 
         key = str(event.ScanCode)
+
+        if self.super_l_down == True:
+            key = "super_l_" + key
+
+        if self.super_r_down == True:
+            key = "super_r_" + key
 
         if self.altGr_down == True:
             key = "altgr_" + key
@@ -131,7 +145,13 @@ class FreeKey(Daemon):
 
     def handle_keyup(self, event):
         #print('keyup:',event
-        if event.Key in ["Control_R", "Control_L",]:
+        if event.Key in ["Super_R"]:
+            self.super_r_down = False
+
+        if event.Key in ["Super_L",]:
+            self.super_l_down = False
+
+        if event.Key in ["Control_R", "Control_L"]:
             self.control_down = False
 
         if event.Key in ["Shift_R", "Shift_L"]:
@@ -165,7 +185,7 @@ def write_default_conf(fn):
 171 gnome-screensaver-command -q | grep "is active" && bash -c '/usr/bin/pactl -- suspend-sink `pacmd list-sinks | grep -P -o "(?<=\* index: )[0-9]+"` `pacmd list-sinks | grep -P -o "state: RUNNING" | wc -l`'
 #
 # Add own key mappings
-# [ctrl_][shift_][alt_][altgr_]keycode command
+# [super_r_][super_l_][ctrl_][shift_][alt_][altgr_]keycode command
 """)
 
 def echo_keypresses():
