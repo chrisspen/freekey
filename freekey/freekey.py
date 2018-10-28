@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 """
 2012.5.26 CKS
 Monitors and responds to key presses.
