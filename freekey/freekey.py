@@ -64,6 +64,7 @@ class FreeKey(Daemon):
         super(FreeKey, self).__init__(*args, **kwargs)
 
         self.ctrl_down = False
+        self.super_down = False
         self.shift_down = False
         self.alt_down = False
         self.altgr_down = False
@@ -85,7 +86,7 @@ class FreeKey(Daemon):
                 continue
             scancode = parts[0]
 
-            if not re.match('(ctrl_)?(shift_)?(alt_)?(altgr_)?\d+', scancode):
+            if not re.match('(ctrl_)?(super_)?(shift_)?(alt_)?(altgr_)?\d+', scancode):
                 print('Malformed scan code: %i' % i)
                 continue
 
@@ -101,6 +102,9 @@ class FreeKey(Daemon):
         if event.Key in ["Control_R", "Control_L",]:
             self.ctrl_down = True
 
+        if event.Key in ["Super_R", "Super_L"]:
+            self.super_down = True
+
         if event.Key in ["Shift_R", "Shift_L"]:
             self.shift_down = True
 
@@ -114,7 +118,7 @@ class FreeKey(Daemon):
             if self.ctrl_down and event.Key in ('C','c'):
                 sys.exit()
 
-        key = ''.join([meta for meta in ["ctrl_", "shift_", "alt_", "altgr_"] if getattr(self, meta + "down")])
+        key = ''.join([meta for meta in ["ctrl_", "super_", "shift_", "alt_", "altgr_"] if getattr(self, meta + "down")])
         key += str(event.ScanCode)
 
         command = self.event_to_command.get(key)
@@ -126,6 +130,9 @@ class FreeKey(Daemon):
         #self.print('keyup:', event)
         if event.Key in ["Control_R", "Control_L",]:
             self.ctrl_down = False
+
+        if event.Key in ["Super_R", "Super_L",]:
+            self.super_down = False
 
         if event.Key in ["Shift_R", "Shift_L"]:
             self.shift_down = False
