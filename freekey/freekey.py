@@ -58,6 +58,7 @@ class FreeKey(Daemon):
     def __init__(self,
         conf=DEFAULT_CONF,
         ctrl_c_kill=False,
+        verbose=False,
         *args, **kwargs):
 
         super(FreeKey, self).__init__(*args, **kwargs)
@@ -67,10 +68,11 @@ class FreeKey(Daemon):
         self.alt_down = False
         self.altgr_down = False
         self.ctrl_c_kill = ctrl_c_kill
+        self.verbose = verbose
 
         # Process configuration file.
         assert os.path.isfile(conf), 'Configuration file %s not found.'
-        self.event_to_command = {} # {scancode:command}
+        self.event_to_command = {}
         i = 0
         for line in open(conf, 'r').readlines():
             i += 1
@@ -88,8 +90,12 @@ class FreeKey(Daemon):
                 continue
 
             command = ' '.join(parts[1:])
-            #print('Loaded command binding: %s = %s' % (scancode, command)
+            self.print('Loaded command binding: %s = %s' % (scancode, command))
             self.event_to_command[scancode] = command
+
+    def print(self, *args):
+        if self.verbose:
+            print(*args)
 
     def handle_keydown(self, event):
         if event.Key in ["Control_R", "Control_L",]:
@@ -108,7 +114,7 @@ class FreeKey(Daemon):
             if self.ctrl_down and event.Key in ('C','c'):
                 sys.exit()
 
-        key = ''.join([meta + "_" for meta in ["ctrl", "shift", "alt", "altgr"] if self[meta]])
+        key = ''.join([meta for meta in ["ctrl_", "shift_", "alt_", "altgr_"] if getattr(self, meta + "down")])
         key += str(event.ScanCode)
 
         command = self.event_to_command.get(key)
@@ -117,7 +123,7 @@ class FreeKey(Daemon):
             os.system(command)
 
     def handle_keyup(self, event):
-        #print('keyup:', event)
+        #self.print('keyup:', event)
         if event.Key in ["Control_R", "Control_L",]:
             self.ctrl_down = False
 
@@ -244,6 +250,13 @@ Actions:
         dest="conf",
         default=DEFAULT_CONF,
         help="Location of the configuration file.")
+
+    parser.add_option(
+        "-v",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Verbose mode.")
 
     (options, args) = parser.parse_args()
 
