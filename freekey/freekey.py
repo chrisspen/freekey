@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 """
 2012.5.26 CKS
 Monitors and responds to key presses.
@@ -120,6 +120,9 @@ class FreeKey(Daemon):
 
         key = ''.join([meta for meta in ["ctrl_", "super_", "shift_", "alt_", "altgr_"] if getattr(self, meta + "down")])
         key += str(event.ScanCode)
+
+        if self.verbose:
+            print("key down", key)
 
         command = self.event_to_command.get(key)
         if command:
