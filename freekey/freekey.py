@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 """
 2012.5.26 CKS
 Monitors and responds to key presses.
@@ -57,20 +57,23 @@ class FreeKey(Daemon):
 
     def __init__(self,
         conf=DEFAULT_CONF,
-        control_c_kill=False,
+        ctrl_c_kill=False,
+        verbose=False,
         *args, **kwargs):
 
         super(FreeKey, self).__init__(*args, **kwargs)
 
-        self.control_down = False
+        self.ctrl_down = False
+        self.super_down = False
         self.shift_down = False
         self.alt_down = False
-        self.altGr_down = False
-        self.control_c_kill = control_c_kill
+        self.altgr_down = False
+        self.ctrl_c_kill = ctrl_c_kill
+        self.verbose = verbose
 
         # Process configuration file.
         assert os.path.isfile(conf), 'Configuration file %s not found.'
-        self.event_to_command = {} # {scancode:command}
+        self.event_to_command = {}
         i = 0
         for line in open(conf, 'r').readlines():
             i += 1
@@ -83,19 +86,24 @@ class FreeKey(Daemon):
                 continue
             scancode = parts[0]
 
-            if not re.match('(ctrl_)?(shift_)?(alt_)?(altgr_)?\d+', scancode):
+            if not re.match('(ctrl_)?(super_)?(shift_)?(alt_)?(altgr_)?\d+', scancode):
                 print('Malformed scan code: %i' % i)
                 continue
 
             command = ' '.join(parts[1:])
-            #print('Loaded command binding: %s = %s' % (scancode, command)
+            self.print('Loaded command binding: %s = %s' % (scancode, command))
             self.event_to_command[scancode] = command
 
-    def handle_keydown(self, event):
-        #print('keydown:',event
+    def print(self, *args):
+        if self.verbose:
+            print(*args)
 
+    def handle_keydown(self, event):
         if event.Key in ["Control_R", "Control_L",]:
-            self.control_down = True
+            self.ctrl_down = True
+
+        if event.Key in ["Super_R", "Super_L"]:
+            self.super_down = True
 
         if event.Key in ["Shift_R", "Shift_L"]:
             self.shift_down = True
@@ -104,25 +112,17 @@ class FreeKey(Daemon):
             self.alt_down = True
 
         if event.ScanCode in [108]:
-            self.altGr_down = True
+            self.altgr_down = True
 
-        if self.control_c_kill:
-            if self.control_down and event.Key in ('C','c'):
+        if self.ctrl_c_kill:
+            if self.ctrl_down and event.Key in ('C','c'):
                 sys.exit()
 
-        key = str(event.ScanCode)
+        key = ''.join([meta for meta in ["ctrl_", "super_", "shift_", "alt_", "altgr_"] if getattr(self, meta + "down")])
+        key += str(event.ScanCode)
 
-        if self.altGr_down == True:
-            key = "altgr_" + key
-
-        if self.alt_down == True:
-            key = "alt_" + key
-
-        if self.shift_down == True:
-            key = "shift_" + key
-
-        if self.control_down == True:
-            key = "ctrl_" + key
+        if self.verbose:
+            print("key down", key)
 
         command = self.event_to_command.get(key)
         if command:
@@ -130,9 +130,12 @@ class FreeKey(Daemon):
             os.system(command)
 
     def handle_keyup(self, event):
-        #print('keyup:',event
+        #self.print('keyup:', event)
         if event.Key in ["Control_R", "Control_L",]:
-            self.control_down = False
+            self.ctrl_down = False
+
+        if event.Key in ["Super_R", "Super_L",]:
+            self.super_down = False
 
         if event.Key in ["Shift_R", "Shift_L"]:
             self.shift_down = False
@@ -141,7 +144,7 @@ class FreeKey(Daemon):
             self.alt_down = False
 
         if event.ScanCode in [108]:
-            self.altGr_down = False
+            self.altgr_down = False
 
     def run(self):
         print('Running...')
@@ -258,6 +261,13 @@ Actions:
         default=DEFAULT_CONF,
         help="Location of the configuration file.")
 
+    parser.add_option(
+        "-v",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Verbose mode.")
+
     (options, args) = parser.parse_args()
 
     action = DEFAULT_ACTION
@@ -275,7 +285,7 @@ Actions:
         daemon = FreeKey(**options.__dict__)
         daemon.restart()
     elif action == RUN:
-        daemon = FreeKey(control_c_kill=True, **options.__dict__)
+        daemon = FreeKey(ctrl_c_kill=True, **options.__dict__)
         daemon.run()
     elif action == START:
         daemon = FreeKey(**options.__dict__)
